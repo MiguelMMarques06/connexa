@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexa - Teste de Registro</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, button { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background-color: #007bff; color: white; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Connexa - Teste de Registro</h1>
+    
+    <form id="registerForm">
+        <div class="form-group">
+            <label for="firstName">Nome:</label>
+            <input type="text" id="firstName" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="lastName">Sobrenome:</label>
+            <input type="text" id="lastName" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Senha (min 8 chars, maiúscula, minúscula, número, símbolo):</label>
+            <input type="password" id="password" required>
+        </div>
+        
+        <button type="submit">Registrar</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <h2>📝 Exemplo de dados válidos:</h2>
+    <ul>
+        <li><strong>Nome:</strong> João</li>
+        <li><strong>Sobrenome:</strong> Silva</li>
+        <li><strong>Email:</strong> joao@teste.com</li>
+        <li><strong>Senha:</strong> MinhaSenh@123</li>
+    </ul>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Enviando...';
+            
+            try {
+                console.log('Enviando dados:', userData);
+                
+                const response = await fetch('http://localhost:3001/api/users/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                const result = await response.json();
+                console.log('Resposta:', result);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Registro realizado com sucesso!</h3>
+                            <p><strong>Usuário:</strong> ${result.data?.user?.email}</p>
+                            <p><strong>ID:</strong> ${result.data?.user?.id}</p>
+                            <p><strong>Mensagem:</strong> ${result.message}</p>
+                        </div>
+                    `;
+                    document.getElementById('registerForm').reset();
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Erro no registro</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Erro:</strong> ${result.error || result.message}</p>
+                            ${result.details ? `<p><strong>Detalhes:</strong> ${result.details.join(', ')}</p>` : ''}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Erro de conexão</h3>
+                        <p><strong>Erro:</strong> ${error.message}</p>
+                        <p>Verifique se o backend está rodando em http://localhost:3001</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

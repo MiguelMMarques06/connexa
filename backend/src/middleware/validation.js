@@ -1,5 +1,5 @@
 const validateRegistration = (req, res, next) => {
-    const { email, password } = req.body;
+    const { email, password, firstName, lastName } = req.body;
     const errors = [];
 
     // Email validation
@@ -40,6 +40,53 @@ const validateRegistration = (req, res, next) => {
         }
     }
 
+    // First name validation
+    if (!firstName) {
+        errors.push('First name is required');
+    } else if (typeof firstName !== 'string' || firstName.trim().length < 2) {
+        errors.push('First name must be at least 2 characters long');
+    } else if (firstName.trim().length > 50) {
+        errors.push('First name must be less than 50 characters');
+    }
+
+    // Last name validation
+    if (!lastName) {
+        errors.push('Last name is required');
+    } else if (typeof lastName !== 'string' || lastName.trim().length < 2) {
+        errors.push('Last name must be at least 2 characters long');
+    } else if (lastName.trim().length > 50) {
+        errors.push('Last name must be less than 50 characters');
+    }
+
+    // If there are validation errors, return them
+    if (errors.length > 0) {
+        return res.status(400).json({
+            error: 'Validation failed',
+            details: errors
+        });
+    }
+
+    // If validation passes, continue to the next middleware/controller
+    next();
+};
+
+const validateLogin = (req, res, next) => {
+    const { email, password } = req.body;
+    const errors = [];
+
+    // Email validation
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!email) {
+        errors.push('Email is required');
+    } else if (!emailRegex.test(email)) {
+        errors.push('Invalid email format');
+    }
+
+    // Password validation (just check if provided for login)
+    if (!password) {
+        errors.push('Password is required');
+    }
+
     // If there are validation errors, return them
     if (errors.length > 0) {
         return res.status(400).json({
@@ -53,5 +100,6 @@ const validateRegistration = (req, res, next) => {
 };
 
 module.exports = {
-    validateRegistration
+    validateRegistration,
+    validateLogin
 };

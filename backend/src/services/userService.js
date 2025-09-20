@@ -18,6 +18,23 @@ class UserService {
         });
     }
 
+    static async findByEmailWithPassword(email) {
+        return new Promise((resolve, reject) => {
+            // Case-insensitive email search, include password for login
+            db.get(
+                'SELECT id, name, email, password_hash FROM users WHERE LOWER(email) = LOWER(?)', 
+                [email],
+                (err, row) => {
+                    if (err) {
+                        console.error('Database error when finding user:', err);
+                        reject(new Error('Database error when finding user'));
+                    }
+                    resolve(row);
+                }
+            );
+        });
+    }
+
     static async createUser(name, email, passwordHash) {
         return new Promise((resolve, reject) => {
             db.run(

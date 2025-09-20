@@ -4,13 +4,40 @@
   "description": "Connexa MVP project",
   "main": "backend/server.js",
   "scripts": {
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "frontend": "cd frontend && npm start",
+    "frontend:build": "cd frontend && npm run build",
+    "frontend:serve": "cd frontend && npm run build && npx serve -s build",
+    "install:all": "npm install && cd frontend && npm install",
+    "dev:full": "concurrently \"npm run dev\" \"npm run frontend\"",
+    "test": "jest --testPathPattern=backend/src/tests/",
+    "test:watch": "jest --watch --testPathPattern=backend/src/tests/",
+    "test:coverage": "jest --coverage --testPathPattern=backend/src/tests/"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4",
+    "nodemon": "^3.0.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/backend/src/tests/setup.js"],
+    "collectCoverageFrom": [
+      "backend/src/**/*.js",
+      "!backend/src/tests/**/*.js"
+    ],
+    "testMatch": [
+      "**/backend/src/tests/**/*.test.js"
+    ]
   }
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -8,56 +9,83 @@ import {
     Typography,
     Box,
     Alert,
-    Paper
+    Paper,
+    Link,
+    Divider
 } from '@mui/material';
-import { register } from '../services/api';
+import { registerUser } from '../services/api';
 
 const validationSchema = Yup.object({
-    name: Yup.string()
-        .required('Name is required')
-        .min(2, 'Name must be at least 2 characters')
-        .max(50, 'Name must be at most 50 characters'),
+    firstName: Yup.string()
+        .required('Nome é obrigatório')
+        .min(2, 'Nome deve ter pelo menos 2 caracteres')
+        .max(50, 'Nome deve ter no máximo 50 caracteres'),
+    lastName: Yup.string()
+        .required('Sobrenome é obrigatório')
+        .min(2, 'Sobrenome deve ter pelo menos 2 caracteres')
+        .max(50, 'Sobrenome deve ter no máximo 50 caracteres'),
     email: Yup.string()
-        .email('Invalid email address')
-        .required('Email is required'),
+        .email('Email inválido')
+        .required('Email é obrigatório'),
     password: Yup.string()
-        .required('Password is required')
-        .min(8, 'Password must be at least 8 characters')
+        .required('Senha é obrigatória')
+        .min(8, 'Senha deve ter pelo menos 8 caracteres')
         .matches(
             /[A-Z]/,
-            'Password must contain at least one uppercase letter'
+            'Senha deve conter pelo menos uma letra maiúscula'
         )
         .matches(
             /[a-z]/,
-            'Password must contain at least one lowercase letter'
+            'Senha deve conter pelo menos uma letra minúscula'
         )
         .matches(
             /[0-9]/,
-            'Password must contain at least one number'
+            'Senha deve conter pelo menos um número'
         )
         .matches(
             /[!@#$%^&*(),.?":{}|<>]/,
-            'Password must contain at least one special character'
+            'Senha deve conter pelo menos um caractere especial (!@#$%^&*(),.?":{}|<>)'
         ),
     confirmPassword: Yup.string()
-        .required('Please confirm your password')
-        .oneOf([Yup.ref('password')], 'Passwords must match')
+        .required('Confirmação de senha é obrigatória')
+        .oneOf([Yup.ref('password')], 'Senhas devem ser iguais')
 });
 
 const Registration = () => {
+    const navigate = useNavigate();
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
+    const handleNavigateToLogin = () => {
+        navigate('/login');
+    };
+
     const handleSubmit = async (values: any, { setSubmitting, resetForm }: any) => {
         try {
+            setError('');
             const { confirmPassword, ...userData } = values;
-            await register(userData);
+            await registerUser(userData);
             setSuccess(true);
             setError('');
             resetForm();
         } catch (err: any) {
-            setError(err.message);
+            console.error('Registration error:', err);
             setSuccess(false);
+            
+            // Extrair mensagem de erro mais detalhada
+            let errorMessage = 'Erro ao realizar cadastro';
+            
+            if (err.response?.data?.details && Array.isArray(err.response.data.details)) {
+                errorMessage = err.response.data.details.join(', ');
+            } else if (err.response?.data?.error) {
+                errorMessage = err.response.data.error;
+            } else if (err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            setError(errorMessage);
         } finally {
             setSubmitting(false);
         }
@@ -68,7 +96,7 @@ const Registration = () => {
             <Box sx={{ mt: 8, mb: 4 }}>
                 <Paper elevation={3} sx={{ p: 4 }}>
                     <Typography variant="h4" component="h1" gutterBottom align="center">
-                        Register
+                        Cadastro
                     </Typography>
 
                     {error && (
@@ -79,13 +107,14 @@ const Registration = () => {
 
                     {success && (
                         <Alert severity="success" sx={{ mb: 2 }}>
-                            Registration successful! You can now log in.
+                            Cadastro realizado com sucesso!
                         </Alert>
                     )}
 
                     <Formik
                         initialValues={{
-                            name: '',
+                            firstName: '',
+                            lastName: '',
                             email: '',
                             password: '',
                             confirmPassword: ''
@@ -104,14 +133,27 @@ const Registration = () => {
                             <Form>
                                 <TextField
                                     fullWidth
-                                    id="name"
-                                    name="name"
-                                    label="Name"
-                                    value={values.name}
+                                    id="firstName"
+                                    name="firstName"
+                                    label="Nome"
+                                    value={values.firstName}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
-                                    error={touched.name && Boolean(errors.name)}
-                                    helperText={touched.name && errors.name}
+                                    error={touched.firstName && Boolean(errors.firstName)}
+                                    helperText={touched.firstName && errors.firstName}
+                                    margin="normal"
+                                />
+
+                                <TextField
+                                    fullWidth
+                                    id="lastName"
+                                    name="lastName"
+                                    label="Sobrenome"
+                                    value={values.lastName}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    error={touched.lastName && Boolean(errors.lastName)}
+                                    helperText={touched.lastName && errors.lastName}
                                     margin="normal"
                                 />
 
@@ -133,7 +175,7 @@ const Registration = () => {
                                     fullWidth
                                     id="password"
                                     name="password"
-                                    label="Password"
+                                    label="Senha"
                                     type="password"
                                     value={values.password}
                                     onChange={handleChange}
@@ -147,7 +189,7 @@ const Registration = () => {
                                     fullWidth
                                     id="confirmPassword"
                                     name="confirmPassword"
-                                    label="Confirm Password"
+                                    label="Confirmar Senha"
                                     type="password"
                                     value={values.confirmPassword}
                                     onChange={handleChange}
@@ -165,11 +207,41 @@ const Registration = () => {
                                     disabled={isSubmitting}
                                     sx={{ mt: 3, mb: 2 }}
                                 >
-                                    {isSubmitting ? 'Registering...' : 'Register'}
+                                    {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
                                 </Button>
                             </Form>
                         )}
                     </Formik>
+
+                    {/* Divisor */}
+                    <Divider sx={{ my: 3 }}>
+                        <Typography variant="body2" color="textSecondary">
+                            ou
+                        </Typography>
+                    </Divider>
+
+                    {/* Link para Login */}
+                    <Box textAlign="center">
+                        <Typography variant="body2" color="textSecondary">
+                            Já possui uma conta?{' '}
+                            <Link 
+                                component="button"
+                                variant="body2"
+                                onClick={handleNavigateToLogin}
+                                sx={{ 
+                                    textDecoration: 'none',
+                                    fontWeight: 'medium',
+                                    color: 'primary.main',
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                        textDecoration: 'underline'
+                                    }
+                                }}
+                            >
+                                Faça login aqui
+                            </Link>
+                        </Typography>
+                    </Box>
                 </Paper>
             </Box>
         </Container>
